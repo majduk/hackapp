@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.4.3</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.google.hackathon</groupId>
+	<artifactId>hackapp</artifactId>
+	<version>17.3.1</version>
+	<packaging>war</packaging>
+	<name>hackapp</name>
+	<description>Hackathon project</description>
+	<properties>
+		<java.version>8</java.version>
+                <deploy.wildfly.host>${env.WILDFLY_HOST}</deploy.wildfly.host>
+                <deploy.wildfly.port>9990</deploy.wildfly.port>
+                <deploy.wildfly.username>admin</deploy.wildfly.username>
+		<deploy.wildfly.password>${env.WILDFLY_PASSWORD}</deploy.wildfly.password>		
+		<version.jboss.bom>1.0.5.Final</version.jboss.bom>
+		<version.javax.servlet.jstl>1.2</version.javax.servlet.jstl>
+	</properties>
+        <dependencyManagement>
+            <dependencies>
+                <!-- JBoss distributes a complete set of Java EE 7 APIs including
+                    a Bill of Materials (BOM). A BOM specifies the versions of a "stack" (or 
+                    a collection) of artifacts. We use this here so that we always get the correct 
+                    versions of artifacts. Here we use the jboss-javaee-6.0-with tools stack 
+                    (you can read this as the JBoss stack of the Java EE 7 APIs, with some extras
+                    tools for your project, such as Arquillian for testing) and the jboss-javaee-6.0-with-hibernate 
+                    stack (which adds in the Hibernate family of projects). -->
+                <dependency>
+                    <groupId>org.jboss.bom</groupId>
+                    <artifactId>jboss-javaee-6.0-with-tools</artifactId>
+                    <version>${version.jboss.bom}</version>
+                    <type>pom</type>
+                    <scope>import</scope>
+                </dependency>
+    
+                <dependency>
+                    <groupId>org.jboss.bom</groupId>
+                    <artifactId>jboss-javaee-6.0-with-hibernate</artifactId>
+                    <version>${version.jboss.bom}</version>
+                    <type>pom</type>
+                    <scope>import</scope>
+                </dependency>
+    
+            </dependencies>
+        </dependencyManagement>
+
+	<dependencies>
+            <dependency>
+                <groupId>javax.enterprise</groupId>
+                <artifactId>cdi-api</artifactId>
+                <scope>provided</scope>
+            </dependency>
+            <!-- Import the Common Annotations API (JSR-250), we use provided 
+                scope as the API is included in WildFly 8 -->
+            <dependency>
+                <groupId>org.jboss.spec.javax.annotation</groupId>
+                <artifactId>jboss-annotations-api_1.1_spec</artifactId>
+                <scope>provided</scope>
+            </dependency>
+    
+            <!-- Import the Servlet API, we use provided scope as the API is 
+                included in WildFly 8 -->
+            <dependency>
+                <groupId>org.jboss.spec.javax.servlet</groupId>
+                <artifactId>jboss-servlet-api_3.0_spec</artifactId>
+                <scope>provided</scope>
+            </dependency>
+    
+            <!-- Import the JAX-RS API, we use provided scope as the API is included in WildFly 8 -->
+            <dependency>
+                <groupId>org.jboss.spec.javax.ws.rs</groupId>
+                <artifactId>jboss-jaxrs-api_1.1_spec</artifactId>
+                <scope>provided</scope>
+            </dependency>
+    
+            <!-- Import the JPA API, we use provided scope as the API is included in WildFly 8 -->
+            <dependency>
+                <groupId>org.hibernate.javax.persistence</groupId>
+                <artifactId>hibernate-jpa-2.0-api</artifactId>
+                <scope>provided</scope>
+            </dependency>
+    
+            <!-- Import the EJB API, we use provided scope as the API is included in WildFly 8 -->
+            <dependency>
+                <groupId>org.jboss.spec.javax.ejb</groupId>
+                <artifactId>jboss-ejb-api_3.1_spec</artifactId>
+                <scope>provided</scope>
+            </dependency>
+    
+            <!-- JSTL 1.2 or + -->
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>jstl</artifactId>
+                <version>${version.javax.servlet.jstl}</version>
+                <scope>runtime</scope>
+            </dependency>
+    
+            <!-- JSR-303 (Bean Validation) Implementation -->
+            <!-- Provides portable constraints such as @Email -->
+            <!-- Hibernate Validator is shipped in WildFly 8 -->
+            <dependency>
+                <groupId>org.hibernate</groupId>
+                <artifactId>hibernate-validator</artifactId>
+                <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+    
+            <!-- Now we declare any tools needed -->
+    
+            <!-- Annotation processor to generate the JPA 2.0 metamodel classes 
+                for typesafe criteria queries -->
+            <dependency>
+                <groupId>org.hibernate</groupId>
+                <artifactId>hibernate-jpamodelgen</artifactId>
+                <scope>provided</scope>
+            </dependency>
+    
+	</dependencies>
+
+	<build>
+	    <plugins>
+                <plugin>
+                    <groupId>org.wildfly.plugins</groupId>
+                    <artifactId>wildfly-maven-plugin</artifactId>
+		    <version>2.0.0.Final</version>
+                    <executions>
+                        <execution>
+                            <phase>install</phase>
+                            <goals>
+                                <goal>deploy</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>                
+                        <filename>${project.build.finalName}.war</filename>
+                        <hostname>${deploy.wildfly.host}</hostname>
+                        <port>${deploy.wildfly.port}</port>
+                        <username>${deploy.wildfly.username}</username>
+                        <password>${deploy.wildfly.password}</password>
+                    </configuration>
+                </plugin>
+	    </plugins>
+	</build>
+
+</project>
